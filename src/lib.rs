@@ -135,7 +135,8 @@ impl ComplyRailContract {
         thresholds.set(key, amount);
 
         env.storage().instance().set(&symbol_short!("thresh"), &thresholds);
-        env.events().publish((symbol_short!("thr_set"),), &asset);
+        // The event carries the rule's jurisdiction and amount, not only the asset (#51).
+        env.events().publish((symbol_short!("thr_set"),), (asset.clone(), jurisdiction, amount));
     }
 
     pub fn get_threshold(env: Env, asset: Address, jurisdiction: String) -> Option<i128> {
