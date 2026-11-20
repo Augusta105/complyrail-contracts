@@ -145,8 +145,13 @@ impl ComplyRailContract {
             .get(&symbol_short!("thresh"))
             .unwrap_or_else(|| Map::new(&env));
 
+        // A rule set for jurisdiction "*" applies wherever no specific rule exists (#52).
         let key = format_threshold_key(&env, &asset, &jurisdiction);
-        thresholds.get(key)
+        if let Some(amount) = thresholds.get(key) {
+            return Some(amount);
+        }
+        let wildcard = format_threshold_key(&env, &asset, &String::from_str(&env, "*"));
+        thresholds.get(wildcard)
     }
 
     pub fn submit_payment(
