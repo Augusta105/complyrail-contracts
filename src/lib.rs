@@ -114,7 +114,8 @@ impl ComplyRailContract {
         entry.status = status;
         env.storage().instance().set(&vasp, &entry);
 
-        env.events().publish((symbol_short!("vasp_upd"),), &vasp);
+        // Typed payload: the VASP and its new status, so consumers need no lookup (#50).
+        env.events().publish((symbol_short!("vasp_upd"),), (vasp.clone(), entry.status));
     }
 
     pub fn get_vasp(env: Env, vasp: Address) -> Option<VaspEntry> {
