@@ -37,6 +37,19 @@ impl ComplyRailContract {
         env.events().publish((symbol_short!("adm_add"),), &new_admin);
     }
 
+    /// Emergency switch: while frozen, no new payments can be submitted (#49).
+    pub fn set_registry_frozen(env: Env, caller: Address, frozen: bool) {
+        caller.require_auth();
+        Self::require_admin(&env, &caller);
+
+        env.storage().instance().set(&symbol_short!("frozen"), &frozen);
+        env.events().publish((symbol_short!("frozen"),), &frozen);
+    }
+
+    pub fn is_registry_frozen(env: Env) -> bool {
+        env.storage().instance().get(&symbol_short!("frozen")).unwrap_or(false)
+    }
+
     pub fn get_admins(env: Env) -> soroban_sdk::Vec<Address> {
         env.storage()
             .instance()
@@ -143,6 +156,7 @@ impl ComplyRailContract {
         amount: i128,
     ) -> BytesN<32> {
         from_vasp.require_auth();
+        assert!(!Self::is_registry_frozen(env.clone()), "registry is frozen");
 
         let from_entry: VaspEntry = env.storage().instance().get(&from_vasp).expect("from_vasp not registered");
         let to_entry: VaspEntry = env.storage().instance().get(&to_vasp).expect("to_vasp not registered");
